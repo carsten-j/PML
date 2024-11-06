@@ -1,6 +1,7 @@
-numpy
-torch
-torchvision
-matplotlib
-scikit-learn
-ipykernel
+jupyterlab==4.3.0
+matplotlib==3.9.2
+scipy==1.14.1
+scikit-learn==1.5.2
+torch==2.4.1
+torchinfo==1.8.0
+torchvision==0.19.1

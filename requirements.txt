@@ -5,3 +5,9 @@ scikit-learn==1.5.2
 torch==2.4.1
 torchinfo==1.8.0
 torchvision==0.19.1
+arviz
+pyro-ppl
+pandas
+numpy
+seaborn
+mpmath

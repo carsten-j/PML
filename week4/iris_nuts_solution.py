@@ -131,6 +131,8 @@ if __name__ == "__main__":
     print("Success: %.2f" % accuracy(logits, y_test))
     print("Success: %.2f" % accuracy2(logits, y_test))
 
+    # How to use ArviZ for diagnostics when the model has so many parameters?
+
     # Az summary
     # data = az.from_pyro(mcmc)
     # summary = az.summary(data)

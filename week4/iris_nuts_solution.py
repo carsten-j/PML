@@ -5,6 +5,8 @@
 
 # Iris data set: inference with NUTS solution
 
+import arviz as az
+import matplotlib.pyplot as plt
 import numpy
 import pyro
 import pyro.distributions as pdist
@@ -99,15 +101,15 @@ if __name__ == "__main__":
 
     # Iris data set
     iris = load_iris()
-    x_all = torch.tensor(iris.data, dtype=torch.float)  # Input vector (4D)
+    X_all = torch.tensor(iris.data, dtype=torch.float)  # Input vector (4D)
     y_all = torch.tensor(iris.target, dtype=torch.int)  # Label(3 classes)
 
     # Make training and test set
-    x_train, x_test, y_train, y_test = model_selection.train_test_split(
-        x_all, y_all, test_size=0.33, random_state=42
+    X_train, X_test, y_train, y_test = model_selection.train_test_split(
+        X_all, y_all, test_size=0.33, random_state=42
     )
 
-    print("Data set / test set sizes: %i, %i." % (x_train.shape[0], x_test.shape[0]))
+    print("Data set / test set sizes: %i, %i." % (X_train.shape[0], X_test.shape[0]))
 
     # Instantiate the Model object
     model = Model()
@@ -117,11 +119,11 @@ if __name__ == "__main__":
 
     # Clear any previously used parameters
     pyro.clear_param_store()
-    mcmc.run(x_train, y_train)
+    mcmc.run(X_train, y_train)
 
     posterior_samples = mcmc.get_samples()
     posterior_predictive = pyro.infer.Predictive(model, posterior_samples)(
-        x=x_test, y=None
+        x=X_test, y=None
     )
 
     # Evaluate the accuracy of the model on the test set.
@@ -134,12 +136,12 @@ if __name__ == "__main__":
     # How to use ArviZ for diagnostics when the model has so many parameters?
 
     # Az summary
-    # data = az.from_pyro(mcmc)
-    # summary = az.summary(data)
-    # print(summary)
+    data = az.from_pyro(mcmc)
+    summary = az.summary(data)
+    print(summary)
     # # Density plot
     # az.plot_posterior(data, var_names=("b1"))
     # plt.show()
-    # # Trace plot
-    # az.plot_trace(data, var_names=("b1"), kind="rank_bars")
-    # plt.show()
+    # Trace plot
+    az.plot_trace(data, kind="rank_bars")
+    plt.show()

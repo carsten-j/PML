@@ -21,15 +21,18 @@ def special_kernel(X, Xprime, eta):
 
 
 # load and normalize Mauna Loa data
-data = np.genfromtxt("co2_mm_mlo.csv", delimiter=",")
+data = np.genfromtxt("/home/carstenj/dev/pml/week4/co2_mm_mlo.csv", delimiter=",")
 # 10 years of data for learning
 X = data[:120, 2] - 1958
+X = X.reshape(-1, 1)
 y_raw = data[:120, 3]
 y_mean = np.mean(y_raw)
 y_std = np.sqrt(np.var(y_raw))
 y = (y_raw - y_mean) / y_std
+y = y.reshape(-1, 1)
 # the next 5 years for prediction
 X_predict = data[120:180, 2] - 1958
+X_predict = X_predict.reshape(-1, 1)
 y_predict = data[120:180, 3]
 
 
@@ -38,7 +41,21 @@ def negLogLikelihood(params, kernel):
     noise_y = params[0]
     eta = params[1:]
     # todo: calculate the negative loglikelihood (See section 6.3 in the lecture notes)
-    return 0.0  # todo: return the negative loglikelihood
+    y_var = noise_y
+    N = len(y)
+    K = kernel(X, X, eta=eta)
+
+    a = -0.5 * y.T @ np.linalg.inv(y_var * np.eye(N) + K) @ y
+    b = -0.5 * np.linalg.slogdet(y_var * np.eye(N) + K)[1]
+    c = -0.5 * N * np.log(np.sqrt(2 * np.pi))
+
+    return a + b + c
+
+    # return (
+    #     -0.5 * y.T @ np.linalg.inv(y_var * np.eye(N) + K) @ y
+    #     - 0.5 * np.linalg.slogdet(y_var * np.eye(N) + K)[1]
+    #     - 0.5 * N * np.log(np.sqrt(2 * np.pi))
+    # )
 
 
 def optimize_params(ranges, kernel, Ngrid):
@@ -54,19 +71,37 @@ def optimize_params(ranges, kernel, Ngrid):
 def conditional(X, y, noise_var, eta, kernel):
     # todo: Write the function...
     # See eq. 66 in the lecture notes. Note that there is a small error: Instead of (S) it should be K(S)
-    return mustar, Sigmastar  # return mean and covariance matrix
+    X, x_star = X, X_predict
+    mu_star = (
+        kernel(X, x_star, eta=eta).T
+        @ np.linalg.inv(kernel(X, X, eta=eta) + noise_var * np.eye(X.shape[0]))
+        @ y
+    )
+    # mu_star = kernel(X, x_star).T @ np.linalg.inv(kernel(X, eta=eta) + noise_var * np.eye(X.shape[0])) @ y
+    sigma_star = kernel(x_star, x_star, eta=eta) - kernel(
+        X, x_star, eta=eta
+    ).T @ np.linalg.inv(
+        kernel(X, X, eta=eta) + noise_var * np.eye(X.shape[0])
+    ) @ kernel(X, x_star, eta=eta)
+    return mu_star, sigma_star
 
 
 # C) todo: adapt this
-kernel = gaussian_kernel  # todo: change to new kernel
-ranges = ((1.0e-4, 10), (1.0e-4, 10))  # todo: change to the new parameters
+kernel = special_kernel  # todo: change to new kernel
+ranges = (
+    (1.0e-4, 10),
+    (1.0e-4, 10),
+    (1.0e-4, 10),
+)  # todo: change to the new parameters
 
 Ngrid = 10
 noise_var, eta = optimize_params(ranges, kernel, Ngrid)
 print("optimal params:", noise_var, eta)
 
 # B) todo: use the learned GP to predict on the observations at X_predict
-prediction_mean_gp, Sigma_gp = conditional("""TODO: Inset input """)
+prediction_mean_gp, Sigma_gp = conditional(
+    np.vstack((X, X_predict)), y, noise_var, eta, kernel
+)
 var_gp = np.diag(
     Sigma_gp
 )  # We only need the diagonal term of the covariance matrix for the plots.

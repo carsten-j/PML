@@ -72,7 +72,7 @@ if __name__ == "__main__":
     print(f"Estimated E[X^2] using HMC/NUTS: {E_x2:.4f}")
 
     # Arviz
-    ## Convert to Arviz InferenceData
+    # Convert to Arviz InferenceData
     data = az.from_pyro(mcmc)
 
     # ESS, r-hat

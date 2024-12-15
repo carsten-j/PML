@@ -1,3 +1,4 @@
+import pickle
 from typing import Callable, Tuple
 
 import matplotlib.pyplot as plt
@@ -9,9 +10,7 @@ from scipy.stats import rv_continuous
 np.random.seed(42)
 save_fig = False
 
-
 domain = (-3, 3)
-
 
 def p(x: np.ndarray) -> np.ndarray:
     """
@@ -144,7 +143,6 @@ def plot_target_vs_proposal_distribution(
 
     plt.show()
 
-
 def rejection_sampling(
     n_samples: int,
     target_dist: Callable[[np.ndarray], np.ndarray],
@@ -197,7 +195,6 @@ def rejection_sampling(
 
     return np.array(samples[:n_samples]), rejected
 
-
 def compute_expectation(p, q, domain, n_samples, batch_size=100, verbose=True):
     samples, rejected = rejection_sampling(
         n_samples, p, q, domain, batch_size=batch_size
@@ -210,26 +207,20 @@ def compute_expectation(p, q, domain, n_samples, batch_size=100, verbose=True):
         print(f"Number of rejected samples: {rejected}")
     return E_x2
 
-
 n_samples = 100000
-
 
 uniform = stats.uniform(loc=-3, scale=6)
 
 
 plot_target_vs_proposal_distribution(p, uniform, domain, "uniform")
 
-
 compute_expectation(p, uniform, domain, n_samples, batch_size=1, verbose=True)
-
 
 gaussian = stats.norm(loc=0, scale=1)
 
-
 plot_target_vs_proposal_distribution(p, gaussian, (-3, 3), "gaussian")
 
-
-compute_expectation(p, gaussian, domain, n_samples, batch_size=1, verbose=True)
+# compute_expectation(p, gaussian, domain, n_samples, batch_size=1, verbose=True)
 
 number_of_samples = [10, 100, 1000]
 proposal_distributions = [uniform, gaussian]
@@ -273,6 +264,7 @@ def importance_sampling(
     tuple: A tuple containing:
         - weights (np.ndarray): The normalized importance weights.
         - samples (np.ndarray): The samples drawn from the proposal distribution.
+        - ess (float): The effective sample size.
     """
     # Sample from the proposal distribution
     samples = proposal_dist.rvs(size=num_samples)
@@ -287,18 +279,32 @@ def importance_sampling(
     weights = p_x / q_x
     weights /= np.sum(weights)  # Normalize the weights
 
-    return weights, samples
+    # Compute effective sample size
+    ess = (np.sum(weights) ** 2) / np.sum(weights**2)
 
+    return weights, samples, ess
 
 # Calculate the expectation
-weights, samples = importance_sampling(p, gaussian)
+weights, samples, ess = importance_sampling(p, gaussian)
 expectation = np.sum(weights * samples**2)
 print("Expected value of x^2:", expectation)
+print("Effective sample size:", ess)
 
+np.sum(weights)
+
+plt.figure(figsize=(10, 6))
+plt.hist(weights, bins=50, color="green", edgecolor="black")
+plt.xlabel("Importance Weights")
+plt.ylabel("Frequency")
+plt.title("Histogram of Importance Weights")
+plt.grid(True)
+plt.tight_layout()
+plt.savefig("./figures/importance_weights.png", dpi=600)
+plt.show()
 
 for trial in range(trials):
     for n_samples in number_of_samples:
-        weights, samples = importance_sampling(p, q, num_samples=n_samples)
+        weights, samples, ess = importance_sampling(p, q, num_samples=n_samples)
         estimator = np.sum(weights * samples**2)
         # Create a string representation of q
         q_repr = "importance sampling norm"
@@ -308,9 +314,13 @@ for trial in range(trials):
                 "samples": n_samples,
                 "sampling method": q_repr,
                 "estimator": estimator,
+                "ess": ess,
             }
         )
 
+
+with open("data.pkl", "wb") as f:
+    pickle.dump(data, f)
 
 # Create a DataFrame from the collected data
 df = pd.DataFrame(data)
@@ -361,3 +371,11 @@ plt.legend(title="sampling method")
 if save_fig:
     plt.savefig("std_estimator.png", dpi=600)
 plt.show()
+
+# Python package versions used
+%load_ext watermark
+%watermark --a "Carsten Jørgensen"
+%watermark --e "carstenj@gmail.com"
+%watermark -m -v -i -iv
+
+

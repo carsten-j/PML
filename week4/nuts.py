@@ -32,11 +32,11 @@ class CustomDensity(pdist.TorchDistribution):
 
     def log_prob(self, x):
         # Return log of the unnormalized density
-        return -(x**2) / 2 + torch.log(
+        return -(x**2) / 2.0 + torch.log(
             (
                 (torch.sin(x)) ** 2
-                + 3 * (torch.cos(x)) ** 2 * (torch.sin(7 * x)) ** 2
-                + 1
+                + 3.0 * (torch.cos(x)) ** 2 * (torch.sin(7.0 * x)) ** 2
+                + 1.0
             )
         )
 
@@ -46,23 +46,17 @@ def model():
 
 
 if __name__ == "__main__":
-    # Run HMC / NUTS
-    # Initial parameters for each chain
-    initial_params = {
-        "x": torch.tensor([-2.0, 2.0, -1.0, 1.0])  # Shape [num_chains]
-    }
-
     nuts_kernel = pyro.infer.NUTS(model, jit_compile=True)
 
     mcmc = pyro.infer.MCMC(
         nuts_kernel,
         num_samples=1000,
-        num_chains=4,
-        warmup_steps=500,
-        initial_params=initial_params,
+        num_chains=10,
+        warmup_steps=1000,
     )
 
     mcmc.run()
+    mcmc.summary()
 
     # Get posterior samples
     posterior_samples = mcmc.get_samples()["x"]
@@ -77,12 +71,17 @@ if __name__ == "__main__":
 
     # ESS, r-hat
     summary = az.summary(data)
+    summary.to_latex("./tables/hmc_nuts_summary.tex")
     print(summary)
 
     # Density plot
-    az.plot_posterior(data)
+    axes = az.plot_posterior(data)
+    fig = axes.figure
+    fig.savefig("./figures/hmc_nuts_density_plot.png")
     plt.show()
 
     # Trace plot
-    az.plot_trace(data, kind="rank_bars")
+    axes = az.plot_trace(data)
+    fig = axes.ravel()[0].figure
+    fig.savefig("./figures/hmc_nuts_trace_plot.png")
     plt.show()

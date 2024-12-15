@@ -1,0 +1,22 @@
+\begin{tabular}{llrr}
+\toprule
+ &  & mean & std \\
+samples & sampling method &  &  \\
+\midrule
+\multirow[t]{4}{*}{10} & HMC/NUTS & 0.888674 & 0.832540 \\
+ & importance sampling norm & 0.944815 & 0.462364 \\
+ & rejection sampling norm & 0.895710 & 0.341577 \\
+ & rejection sampling uniform & 0.925233 & 0.411897 \\
+\cline{1-4}
+\multirow[t]{4}{*}{100} & HMC/NUTS & 0.922474 & 0.368167 \\
+ & importance sampling norm & 0.908583 & 0.126450 \\
+ & rejection sampling norm & 0.918061 & 0.120216 \\
+ & rejection sampling uniform & 0.942172 & 0.127246 \\
+\cline{1-4}
+\multirow[t]{4}{*}{1000} & HMC/NUTS & 0.919682 & 0.106590 \\
+ & importance sampling norm & 0.915117 & 0.041919 \\
+ & rejection sampling norm & 0.913995 & 0.042152 \\
+ & rejection sampling uniform & 0.911965 & 0.042062 \\
+\cline{1-4}
+\bottomrule
+\end{tabular}

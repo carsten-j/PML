@@ -30,7 +30,7 @@ def g(x):
     return -(torch.sin(6 * torch.pi * x) ** 2) + 6 * x**2 - 5 * x**4 + 3 / 2
 
 
-def get_data(seed):
+def get_data():
     X, y = sample_data_from(g)
 
     # print("X1",X)
@@ -59,6 +59,13 @@ pyro.clear_param_store()
 def get_kernel(l, v, p):
     return pyro.contrib.gp.kernels.Periodic(
         input_dim=1, lengthscale=l, variance=v, period=p
+    )
+
+
+def get_kernel_2(l, p):
+    return pyro.contrib.gp.kernels.Sum(
+        pyro.contrib.gp.kernels.Periodic(input_dim=1, period=p),
+        pyro.contrib.gp.kernels.RBF(input_dim=1, lengthscale=l),
     )
 
 
@@ -260,11 +267,11 @@ def task2(X, y, X_test, y_test):
 #     return torch.tensor(likelihoods)
 
 
-def compute_log_likelihood(posterior_samples, X_test, y_test):
+def compute_log_likelihood(posterior_samples, X, y, X_test, y_test):
     likelihoods = []
     for kernel_params in zip(*posterior_samples.values()):
         with pyro.plate("data"):
-            kernel = get_kernel(*kernel_params)
+            kernel = get_kernel_2(*kernel_params)
             gp = pyro.contrib.gp.models.GPRegression(
                 X, y, kernel, noise=torch.tensor(0.01)
             )
@@ -327,7 +334,7 @@ def task3(X, y, X_test, y_test):
     # Compute the posterior log-likelihood of the test set
     # print("Posterior samples",posterior_samples)
     # print(y_test)
-    log_likelihoods = compute_log_likelihood(posterior_samples, X_test, y_test)
+    log_likelihoods = compute_log_likelihood(posterior_samples, X, y, X_test, y_test)
     print(log_likelihoods)
     # print(log_likelihoods.shape)
     # print(torch.mean(log_likelihoods))
@@ -352,7 +359,7 @@ def task4(X, y, X_test, y_test):
     print("y_test", y_test)
     print("posterior_samples", posterior_samples)
     # Compute the posterior log-likelihood for each sample
-    log_likelihoods = compute_log_likelihood(posterior_samples, X_test, y_test)
+    log_likelihoods = compute_log_likelihood(posterior_samples, X, y, X_test, y_test)
 
     # Compute the mean and standard deviation of the log likelihoods
     mean_log_likelihood = torch.mean(log_likelihoods)
@@ -375,40 +382,40 @@ def task5():
         X, X_test, y, y_test = get_data()
 
         # Task 2: Fitting a GP Model using SVI (MAP approach)
-        # theta_star, posterior_log_likelihood_map = task2(X, y, X_test, y_test)
-        # map_likelihoods.append(posterior_log_likelihood_map)
+        theta_star, posterior_log_likelihood_map = task2(X, y, X_test, y_test)
+        map_likelihoods.append(posterior_log_likelihood_map)
 
         # Task 4: Approximate Posterior Likelihood with MCMC
         mean_log_likelihood_mcmc, _ = task4(X, y, X_test, y_test)
         mcmc_likelihoods.append(mean_log_likelihood_mcmc)
 
     # Calculate mean and standard deviation for MAP and MCMC likelihoods
-    # map_mean = torch.mean(torch.tensor(map_likelihoods))
-    # map_std = torch.std(torch.tensor(map_likelihoods))
+    map_mean = torch.mean(torch.tensor(map_likelihoods))
+    map_std = torch.std(torch.tensor(map_likelihoods))
 
     mcmc_mean = torch.mean(torch.tensor(mcmc_likelihoods))
     mcmc_std = torch.std(torch.tensor(mcmc_likelihoods))
 
     # Report the results
-    # print("MAP Likelihoods Mean:", map_mean)
-    # print("MAP Likelihoods Std Deviation:", map_std)
+    print("MAP Likelihoods Mean:", map_mean)
+    print("MAP Likelihoods Std Deviation:", map_std)
     print("MCMC Likelihoods Mean:", mcmc_mean)
     print("MCMC Likelihoods Std Deviation:", mcmc_std)
-    print("MCMC likelihoods", mcmc_likelihoods)
+    # print("MCMC likelihoods", mcmc_likelihoods)
 
 
 if __name__ == "__main__":
-    X, X_test, y, y_test = get_data()
-    task3(X, y, X_test, y_test)
-    task2(X, y, X_test, y_test)
+    # X, X_test, y, y_test = get_data()
+    # task3(X, y, X_test, y_test)
+    # task2(X, y, X_test, y_test)
     # task4(X, y, X_test, y_test)
-    # task5()
+    task5()
 
 
 # %%
 
 # plt.bar("Gradient descent", np.sum(likelihoods_gd))
-plt.bar("MCMC", np.sum(likelihoods_mcmc))
-plt.show()
+# plt.bar("MCMC", np.sum(likelihoods_mcmc))
+# plt.show()
 
 # %%

@@ -327,7 +327,7 @@ class DDPM(nn.Module):
             )
         elif self.predict_mean_by == "u":
             mean = self.network(xt, t)
-        elif self.predict_mean_by == "x0":  # eq 15
+        elif self.predict_mean_by == "x0":
             full_epsilon = xt - self.network(xt, t)
             mean = (1.0 / torch.sqrt(1 - self.beta[t])) * (
                 xt - (self.beta[t] / torch.sqrt(1 - self.alpha_bar[t])) * full_epsilon

@@ -88,6 +88,7 @@ class YourClassName:
 **Note:** Remember to import the necessary modules (`defaultdict`, `deque`, `math`, and `typing.Deque`) at the beginning of your file.
 
 
+
 def weight_function(self, t: torch.Tensor) -> torch.Tensor:
     """
     Importance sampling weight function based on E[L_t^2] using a history.

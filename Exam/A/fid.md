@@ -431,3 +431,28 @@ Computing FID for the MNIST dataset involves adapting the standard procedure to 
 Always keep in mind that metrics should be appropriate for the data and the specific characteristics of the images being analyzed. Combining quantitative metrics like FID with qualitative evaluations will give you a more comprehensive understanding of your model's performance.
 
 If you have further questions or need assistance with specific implementation details, feel free to ask!
+
+
+
+Computing the Fréchet Inception Distance (FID) for the MNIST dataset involves some unique considerations due to the nature of the dataset and the characteristics of the default Inception network used in the FID computation. The domain gap between MNIST and ImageNet can lead to unreliable FID scores. Here we highlight some of our concerns:
+\begin{itemize}
+ \item Inception expects 3-channel RGB images of size 299x299 pixels, while MNIST images are single-channel grayscale images of size 28x28 pixels.
+ \item Inception is trained on ImageNet, which consists of natural images vastly different from handwritten digits in MNIST.
+ The high-level features extracted by Inception may not be appropriate for MNIST,
+\end{itemize}
+
+All of the above concern can lead to inaccurate FID scores that do not reflect the true similarity between real and generated MNIST images. We also note from table , that FID when using $x_0$ to predict instead of $\epsilon$ is better which contradict the conclusion in the \cite{} paper.
+
+
+
+- **Problem:** 
+   - **Implication:** Directly feeding MNIST images into Inception v3 without proper preprocessing will result in errors or meaningless activations.
+
+1. **Domain Gap Between Datasets:**
+
+   - **Problem:** Inception v3 is trained on ImageNet, which consists of natural images vastly different from handwritten digits in MNIST.
+   - **Implication:** The high-level features extracted by Inception may not be appropriate for MNIST, leading to unreliable FID scores.
+
+- **Statistical Distribution Differences:**
+  - The feature representations extracted from MNIST images using Inception v3 might not be meaningful due to the domain difference.
+  - This can lead to inaccurate FID scores that do not reflect the true similarity between real and generated MNIST images.
